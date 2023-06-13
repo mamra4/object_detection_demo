@@ -15,7 +15,7 @@ from __future__ import absolute_import
 import os
 import io
 import pandas as pd
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import sys
 
 sys.path.append("../../models/research")
@@ -43,10 +43,7 @@ FLAGS = flags.FLAGS
 def split(df, group):
     data = namedtuple("data", ["filename", "object"])
     gb = df.groupby(group)
-    return [
-        data(filename, gb.get_group(x))
-        for filename, x in zip(gb.groups.keys(), gb.groups)
-    ]
+    return [data(filename, gb.get_group(x)) for filename, x in zip(gb.groups.keys(), gb.groups)]
 
 
 def create_tf_example(group, path, label_map):
@@ -73,11 +70,7 @@ def create_tf_example(group, path, label_map):
         ymaxs.append(row["ymax"] / height)
         classes_text.append(row["class"].encode("utf8"))
         class_index = label_map.get(row["class"])
-        assert (
-            class_index is not None
-        ), "class label: `{}` not found in label_map: {}".format(
-            row["class"], label_map
-        )
+        assert class_index is not None, "class label: `{}` not found in label_map: {}".format(row["class"], label_map)
         classes.append(class_index)
 
     tf_example = tf.train.Example(
@@ -93,9 +86,7 @@ def create_tf_example(group, path, label_map):
                 "image/object/bbox/xmax": dataset_util.float_list_feature(xmaxs),
                 "image/object/bbox/ymin": dataset_util.float_list_feature(ymins),
                 "image/object/bbox/ymax": dataset_util.float_list_feature(ymaxs),
-                "image/object/class/text": dataset_util.bytes_list_feature(
-                    classes_text
-                ),
+                "image/object/class/text": dataset_util.bytes_list_feature(classes_text),
                 "image/object/class/label": dataset_util.int64_list_feature(classes),
             }
         )
@@ -112,9 +103,7 @@ def main(_):
     from object_detection.utils import label_map_util
 
     label_map = label_map_util.load_labelmap(FLAGS.label_map)
-    categories = label_map_util.convert_label_map_to_categories(
-        label_map, max_num_classes=90, use_display_name=True
-    )
+    categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=90, use_display_name=True)
     category_index = label_map_util.create_category_index(categories)
     label_map = {}
     for k, v in category_index.items():
