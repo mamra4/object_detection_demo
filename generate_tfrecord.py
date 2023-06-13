@@ -18,6 +18,8 @@ import pandas as pd
 import tensorflow.compat.v1 as tf
 import sys
 
+# change tensorflow version
+
 sys.path.append("../../models/research")
 
 from PIL import Image
